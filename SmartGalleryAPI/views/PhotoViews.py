@@ -2,8 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
-from .models import Photo, Person
-from .serializers import PhotoSerializer, PersonSerializer
+from ..models import Photo, Person
+from ..serializers import PhotoSerializer, PersonSerializer
 
 class PhotoListApiView(APIView):
     # add permission to check if user is authenticated
@@ -14,7 +14,6 @@ class PhotoListApiView(APIView):
         '''
         List all the photo items for given requested user
         '''
-        print(request.headers)
         photos = Photo.objects.filter(User = request.user.id)
         serializer = PhotoSerializer(photos, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -71,6 +70,7 @@ class PhotoDetailApiView(APIView):
         '''
         Updates the photo item with given photo_id if exists
         '''
+        print("put")
         photo_instance = self.get_object(photo_id, request.user.id)
         if not photo_instance:
             return Response(
@@ -106,39 +106,3 @@ class PhotoDetailApiView(APIView):
             status=status.HTTP_200_OK
         )
 
-class PersonApiView(APIView):
-    # add permission to check if user is authenticated
-    permission_classes = [permissions.IsAuthenticated]
-
-    # 1. List all
-    def get(self, request, *args, **kwargs):
-        '''
-        List all the Person items for given requested user
-        '''
-        photos = Person.objects.filter(User = request.user.id)
-        serializer = PersonSerializer(photos, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    # 2. Create
-    def post(self, request, *args, **kwargs):
-        '''
-        Create the Person with given person data
-        '''
-        data = {
-            'Name': request.data.get('Name'), 
-            'User': request.user.id
-        }
-        serializer = PersonSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def get_id(self, request, *args, **kwargs):
-        '''
-        Get the Person with given person id
-        '''
-        photo = Person.objects.get(id = request.data.get('id'), User = request.user.id)
-        serializer = PersonSerializer(photo)
-        return Response(serializer.data, status=status.HTTP_200_OK)

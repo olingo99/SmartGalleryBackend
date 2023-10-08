@@ -16,6 +16,7 @@ class Photo(models.Model):
 
 class Person(models.Model):
     Name = models.CharField(max_length = 100)
+    User = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
 
     def __str__(self):
         return self.Name

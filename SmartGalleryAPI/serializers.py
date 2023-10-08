@@ -11,7 +11,7 @@ class PhotoSerializer(serializers.ModelSerializer):
 class PersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Person
-        fields = ["Name"]
+        fields = ["Name", "User"]
 
 
 class LinkPhotoPersonSerializer(serializers.ModelSerializer):

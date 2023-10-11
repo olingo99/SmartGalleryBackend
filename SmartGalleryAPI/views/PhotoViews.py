@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework import permissions
 from ..models import Photo, Person
 from ..serializers import PhotoSerializer, PersonSerializer
+import deepface
 
 class PhotoListApiView(APIView):
     # add permission to check if user is authenticated

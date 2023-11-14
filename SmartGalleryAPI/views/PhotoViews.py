@@ -107,3 +107,32 @@ class PhotoDetailApiView(APIView):
             status=status.HTTP_200_OK
         )
 
+
+
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django import forms
+from django.core.files.storage import FileSystemStorage
+from django.http import HttpResponse
+
+class UploadFileForm(forms.Form):
+    title = forms.CharField(max_length=50)
+    file = forms.FileField()
+
+class testUploadPhoto(APIView):
+    def post(self, request, *args, **kwargs):
+        '''
+        Create the Photo with given photo data
+        '''
+        print(request.method)
+        form = UploadFileForm(request.POST, request.FILES)
+        if True:
+            in_memory_file_obj = request.FILES["file"]
+            FileSystemStorage(location="C:/Users/engel/Documents/5MIN/SmartGalleryBackend/temp").save(in_memory_file_obj.name, in_memory_file_obj)
+            # return HttpResponseRedirect("/success/url/")
+            print('succes')
+            return Response(status=200)
+        else:
+            form = UploadFileForm()
+        # return render(request, "upload.html", {"form": form})
+            print('not succes')

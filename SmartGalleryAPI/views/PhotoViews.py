@@ -115,24 +115,57 @@ from django import forms
 from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponse
 
-class UploadFileForm(forms.Form):
-    title = forms.CharField(max_length=50)
-    file = forms.FileField()
+# class UploadFileForm(forms.Form):
+#     file = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))
 
 class testUploadPhoto(APIView):
     def post(self, request, *args, **kwargs):
         '''
-        Create the Photo with given photo data
+        Create the Photos with given photo data
         '''
         print(request.method)
-        form = UploadFileForm(request.POST, request.FILES)
-        if True:
-            in_memory_file_obj = request.FILES["file"]
-            FileSystemStorage(location="C:/Users/engel/Documents/5MIN/SmartGalleryBackend/temp").save(in_memory_file_obj.name, in_memory_file_obj)
-            # return HttpResponseRedirect("/success/url/")
-            print('succes')
-            return Response(status=200)
-        else:
-            form = UploadFileForm()
-        # return render(request, "upload.html", {"form": form})
-            print('not succes')
+        print(request.FILES)
+        a = request.FILES
+        print(type(a))
+        if 'file0' not in request.FILES:
+            return Response({'error': 'No file for upload'}, status=400)
+        for name, file in request.FILES.lists():
+            # print(file[0].name)
+            # print(file.name)
+            # print(name)
+            FileSystemStorage(location="C:/Users/engel/Documents/5MIN/SmartGalleryBackend/temp").save(file[0].name, file[0])
+        print('success')
+        return Response(status=200)
+    # def post(self, request, *args, **kwargs):
+    #     '''
+    #     Create the Photos with given photo data
+    #     '''
+    #     print(request.method)
+    #     form = UploadFileForm(request.POST, request.FILES)
+    #     if form.is_valid():
+    #         for key in request.FILES.keys():
+    #             in_memory_file_obj = request.FILES[key]
+    #             FileSystemStorage(location="C:/Users/engel/Documents/5MIN/SmartGalleryBackend/temp").save(in_memory_file_obj.name, in_memory_file_obj)
+    #         print('success')
+    #         return Response(status=200)
+    #     else:
+    #         print(form.errors)
+    #         form = UploadFileForm()
+    #         print('not success')
+    #         return Response(status=400)
+    # def post(self, request, *args, **kwargs):
+    #     '''
+    #     Create the Photo with given photo data
+    #     '''
+    #     print(request.method)
+    #     form = UploadFileForm(request.POST, request.FILES)
+    #     if True:
+    #         in_memory_file_obj = request.FILES["file"]
+    #         FileSystemStorage(location="C:/Users/engel/Documents/5MIN/SmartGalleryBackend/temp").save(in_memory_file_obj.name, in_memory_file_obj)
+    #         # return HttpResponseRedirect("/success/url/")
+    #         print('succes')
+    #         return Response(status=200)
+    #     else:
+    #         form = UploadFileForm()
+    #     # return render(request, "upload.html", {"form": form})
+    #         print('not succes')

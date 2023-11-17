@@ -4,7 +4,6 @@ from rest_framework import status
 from rest_framework import permissions
 from ..models import Photo, Person
 from ..serializers import PhotoSerializer, PersonSerializer
-import deepface
 
 class PhotoListApiView(APIView):
     # add permission to check if user is authenticated
@@ -114,10 +113,23 @@ from django.shortcuts import render
 from django import forms
 from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponse
-
 # class UploadFileForm(forms.Form):
 #     file = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))
 
+
+#maybe use middleware
+
+# class CustomMiddleware:
+#     def __init__(self, get_response):
+#         self.get_response = get_response
+
+#     def __call__(self, request):
+#         response = self.get_response(request)
+#         # Code to execute after the view goes here
+#         print("This will be executed after the view")
+#         return response
+
+# need to add to middleware list
 class testUploadPhoto(APIView):
     def post(self, request, *args, **kwargs):
         '''
@@ -129,43 +141,131 @@ class testUploadPhoto(APIView):
         print(type(a))
         if 'file0' not in request.FILES:
             return Response({'error': 'No file for upload'}, status=400)
-        for name, file in request.FILES.lists():
-            # print(file[0].name)
-            # print(file.name)
-            # print(name)
+        for _, file in request.FILES.lists():
             FileSystemStorage(location="C:/Users/engel/Documents/5MIN/SmartGalleryBackend/temp").save(file[0].name, file[0])
+            detectSubject(file[0])
         print('success')
+
+
         return Response(status=200)
-    # def post(self, request, *args, **kwargs):
-    #     '''
-    #     Create the Photos with given photo data
-    #     '''
-    #     print(request.method)
-    #     form = UploadFileForm(request.POST, request.FILES)
-    #     if form.is_valid():
-    #         for key in request.FILES.keys():
-    #             in_memory_file_obj = request.FILES[key]
-    #             FileSystemStorage(location="C:/Users/engel/Documents/5MIN/SmartGalleryBackend/temp").save(in_memory_file_obj.name, in_memory_file_obj)
-    #         print('success')
-    #         return Response(status=200)
-    #     else:
-    #         print(form.errors)
-    #         form = UploadFileForm()
-    #         print('not success')
-    #         return Response(status=400)
-    # def post(self, request, *args, **kwargs):
-    #     '''
-    #     Create the Photo with given photo data
-    #     '''
-    #     print(request.method)
-    #     form = UploadFileForm(request.POST, request.FILES)
-    #     if True:
-    #         in_memory_file_obj = request.FILES["file"]
-    #         FileSystemStorage(location="C:/Users/engel/Documents/5MIN/SmartGalleryBackend/temp").save(in_memory_file_obj.name, in_memory_file_obj)
-    #         # return HttpResponseRedirect("/success/url/")
-    #         print('succes')
-    #         return Response(status=200)
-    #     else:
-    #         form = UploadFileForm()
-    #     # return render(request, "upload.html", {"form": form})
-    #         print('not succes')
+
+
+
+
+
+import json
+from ultralytics import YOLO
+import os 
+from deepface import DeepFace
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from PIL import Image
+import os
+
+
+def detectSubject(img):
+    model = YOLO("yolov8n.pt")
+    res = model.predict(img)
+    classes = []
+    print(len(res))
+    for result in res:
+        print(len(result.boxes))
+        for box in result.boxes:
+            if box.cls == 0:
+                return detectPerson(img)
+            else:
+                detectedClass = result.names[int(box.cls[0])]
+                if  detectedClass not in classes : classes.append(detectedClass) 
+    return ((),f"No human, {' '.join(str(i) for i in classes)} in image")
+
+
+
+
+def detectPerson(img):
+    faces = DeepFace.extract_faces(img, detector_backend='mtcnn')
+    image = Image.open(img)
+    size = image.size
+    # print(size)
+    padding_sacle = 0.05
+    padding = (padding_sacle*size[0], padding_sacle*size[1])
+    find_result = {}
+    for face in faces:
+        face = face['facial_area']
+        x1,x2 = max(face['x']-padding[0],0), min(face['x']+face['w']+padding[0], size[0])
+        y1,y2 = max(face['y']-padding[1],0), min(face['y']+face['h']+padding[1], size[1])
+        cropped_face = image.crop((x1, y1, x2, y2))
+        # cropped_face = numpy.array(cropped_face)
+        cropped_face.save("../../temp/cropped_face.png")
+        face_result = DeepFace.find("../../temp/cropped_face.png", "../../temp/faceDataBase", enforce_detection=False)
+        os.remove("../../temp/cropped_face.png")
+        max_cosine = float('inf')
+        max_index = -1
+
+        for i, df in enumerate(face_result):
+            cosine = df['VGG-Face_cosine'].min()
+            if cosine < max_cosine:
+                max_cosine = cosine
+                max_index = i
+
+        max_df = face_result[max_index]
+        max_row = max_df.loc[max_df['VGG-Face_cosine'].idxmin()]
+        print(max_row['identity'])
+        print(max_row['VGG-Face_cosine'])
+        if max_row['VGG-Face_cosine'] <= 0.1:
+            identity = max_row['identity'].replace("\\", "/")
+            identity = identity.split("/")[-2]
+            print(identity)
+            identity = translateIdToName(identity)
+            find_result[len(find_result)]=(face,identity)
+        else:
+            # id = len(find_result)
+            id = len([name for name in os.listdir("../../temp/faceDataBase")])
+            face_result = (face,"Unknown")
+            find_result[id]=face_result
+            name = addToDb(cropped_face, id, face_result)
+            face_result = (face, name)
+    return find_result
+
+
+def translateIdToName(id):
+    print(id)
+    with open("id_name.json") as file:
+        data = json.load(file)
+        name = data.get(id, "not in database")
+    return name
+
+def addToDb(face_file, id, face_result):
+    name = getName()
+    # known_face = os.listdir("faceDataBase")
+    data = None
+    dirtyFlag = False
+    with open('id_name.json') as file:
+        data = json.load(file)
+        key_list = list(data.keys())
+        val_list = list(data.values())
+        if name in data.values():
+            id = key_list[val_list.index(name)]
+            img_id = len(list(os.listdir(f"C:/Users/engel/Documents/5MIN/AIProject_SmartGallery/faceDataBase/{id}")))
+            face_file.save(f"C:/Users/engel/Documents/5MIN/AIProject_SmartGallery/faceDataBase/{id}/{img_id}.png")
+        else:
+            id = len(data)
+            os.mkdir(f"C:/Users/engel/Documents/5MIN/AIProject_SmartGallery/faceDataBase/{id}")
+            face_file.save(f"C:/Users/engel/Documents/5MIN/AIProject_SmartGallery/faceDataBase/{id}/0.png")
+
+            data[id]=name
+            dirtyFlag = True
+        if os.path.exists("C:/Users/engel/Documents/5MIN/AIProject_SmartGallery/faceDataBase/representations_vgg_face.pkl"):
+            os.remove("C:/Users/engel/Documents/5MIN/AIProject_SmartGallery/faceDataBase/representations_vgg_face.pkl")
+        else:
+            print("The file does not exist")
+        # os.remove("C:/Users/engel/Documents/5MIN/AIProject_SmartGallery/faceDataBase/representations_vgg_face.pkl")
+    if dirtyFlag:
+        with open('id_name.json','w') as file:
+            json.dump(data, file)
+
+        
+    return name
+
+
+def getName():
+    return str(input())

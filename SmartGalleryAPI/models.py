@@ -26,3 +26,8 @@ class LinkPhotoPerson(models.Model):
     BoundingBox = models.CharField(max_length=100)
     Person = models.ForeignKey(Person, on_delete=models.CASCADE)
     Photo = models.ForeignKey(Photo,on_delete=models.CASCADE)
+
+class CroppedFace(models.Model):
+    Path = models.CharField(max_length=200)
+    Person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    OriginalPhoto = models.ForeignKey(Photo, on_delete=models.CASCADE)

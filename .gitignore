@@ -1,1 +1,7 @@
 temp
+faceDataBase
+db.sqlite3
+yolov8n.pt
+
+db.sqlite3
+*.png

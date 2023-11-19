@@ -238,7 +238,7 @@ def detectPerson(img):
             # FileSystemStorage(location=f"photos/{person.id}").save(img, image)
             os.rename(img, f"photos/{person.id}.png")
 
-            photoObject = Photo.objects.create(Path=f"faceDataBase/{person.id}/0.png", User=user)
+            photoObject = Photo.objects.create(Path=f"photos/{person.id}/0.png", User=user)
             photoObject.save()
             croppedFaceObject = CroppedFace.objects.create(Path=f"faceDataBase/{person.id}/0.png", Person=person, OriginalPhoto=photoObject)
             croppedFaceObject.save()

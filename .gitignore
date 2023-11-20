@@ -5,3 +5,10 @@ yolov8n.pt
 
 db.sqlite3
 *.png
+
+*.JPG
+*.jpg
+
+photos
+photos/*
+temp/*

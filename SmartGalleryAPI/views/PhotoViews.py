@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
-from ..models import Photo, Person, User
+from ..models import Person, User
 from ..serializers import PhotoSerializer, PersonSerializer
 
 class PhotoListApiView(APIView):
@@ -165,7 +165,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from PIL import Image
 import os
-from ..models import Person, CroppedFace
+from ..models import Person, CroppedFace, LinkPhotoPerson, Photo
 from ..serializers import PersonSerializer, CroppedFaceSerializer
 
 def detectSubject(img):
@@ -220,13 +220,18 @@ def detectPerson(img):
         max_row = max_df.loc[max_df['VGG-Face_cosine'].idxmin()]
         print(max_row['identity'])
         print(max_row['VGG-Face_cosine'])
-        if max_row['VGG-Face_cosine'] <= 0.1:                           #to do after new face is done
+        if max_row['VGG-Face_cosine'] <= 0.2:                           #to do after new face is done
             identity = max_row['identity'].replace("\\", "/")
             identity = identity.split("/")[-2]
-            print(identity)
-            # identity = translateIdToName(identity)
+            print('identity ' + identity)
             find_result[len(find_result)]=(face,identity)
             os.remove("temp/cropped_face.png")
+            photo = Photo.objects.create(Path=f"photos/{identity}.png", User=user)
+            photo.save()
+            # extension = os.path.splitext(img)[1]
+            os.rename(img, f"photos/{identity}/{img.split('/')[-1]}")
+
+            LinkPhotoPerson.objects.create(BoundingBox=f"{x1},{y1},{x2},{y2}", Person=Person.objects.get(pk=identity), Photo=photo).save()
 
         else:
             # id = len(find_result)
@@ -236,12 +241,19 @@ def detectPerson(img):
             os.mkdir(f"faceDataBase/{person.id}")
             os.rename("temp/cropped_face.png", f"faceDataBase/{person.id}/0.png")
             # FileSystemStorage(location=f"photos/{person.id}").save(img, image)
-            os.rename(img, f"photos/{person.id}.png")
+            # extension = os.path.splitext(img)[1]
+            os.mkdir(f"photos/{person.id}")
+            os.rename(img, f"photos/{person.id}/{img.split('/')[-1]}")
 
-            photoObject = Photo.objects.create(Path=f"photos/{person.id}/0.png", User=user)
+            photoObject = Photo.objects.create(Path=f"photos/{person.id}/0.png", User=user, )
             photoObject.save()
+            link = LinkPhotoPerson.objects.create(BoundingBox=f"{x1},{y1},{x2},{y2}", Person=person, Photo=photoObject)
+            link.save()
             croppedFaceObject = CroppedFace.objects.create(Path=f"faceDataBase/{person.id}/0.png", Person=person, OriginalPhoto=photoObject)
             croppedFaceObject.save()
+
+            os.remove("faceDataBase/representations_vgg_face.pkl")
+
             # id = len([name for name in os.listdir("temp/faceDataBase")])
 
             face_result = (face,"Unknown")

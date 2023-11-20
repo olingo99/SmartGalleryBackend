@@ -8,6 +8,7 @@ class Photo(models.Model):
     Date = models.DateTimeField(auto_now=False, auto_now_add=True, blank= True)
     Location = models.CharField(max_length=200)
     User = models.ForeignKey(User, on_delete=models.CASCADE)
+    Persons = models.ManyToManyField('Person', through='LinkPhotoPerson')
 
     def __str__(self):
         return f'{self.User} uploaded on {self.Date.date}'

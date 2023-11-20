@@ -224,7 +224,7 @@ def detectPerson(img):
             identity = max_row['identity'].replace("\\", "/")
             identity = identity.split("/")[-2]
             print(identity)
-            identity = translateIdToName(identity)
+            # identity = translateIdToName(identity)
             find_result[len(find_result)]=(face,identity)
             os.remove("temp/cropped_face.png")
 
@@ -248,48 +248,3 @@ def detectPerson(img):
             find_result[id]=face_result
             # name = addToDb(cropped_face, id, face_result)
     return find_result
-
-
-def translateIdToName(id):
-    print(id)
-    with open("id_name.json") as file:
-        data = json.load(file)
-        name = data.get(id, "not in database")
-    return name
-
-
-# def addToDb(face_file, id, face_result):
-#     name = getName()
-#     # known_face = os.listdir("faceDataBase")
-#     data = None
-#     dirtyFlag = False
-#     with open('id_name.json') as file:
-#         data = json.load(file)
-#         key_list = list(data.keys())
-#         val_list = list(data.values())
-#         if name in data.values():
-#             id = key_list[val_list.index(name)]
-#             img_id = len(list(os.listdir(f"C:/Users/engel/Documents/5MIN/AIProject_SmartGallery/faceDataBase/{id}")))
-#             face_file.save(f"C:/Users/engel/Documents/5MIN/AIProject_SmartGallery/faceDataBase/{id}/{img_id}.png")
-#         else:
-#             id = len(data)
-#             os.mkdir(f"C:/Users/engel/Documents/5MIN/AIProject_SmartGallery/faceDataBase/{id}")
-#             face_file.save(f"C:/Users/engel/Documents/5MIN/AIProject_SmartGallery/faceDataBase/{id}/0.png")
-
-#             data[id]=name
-#             dirtyFlag = True
-#         if os.path.exists("C:/Users/engel/Documents/5MIN/AIProject_SmartGallery/faceDataBase/representations_vgg_face.pkl"):
-#             os.remove("C:/Users/engel/Documents/5MIN/AIProject_SmartGallery/faceDataBase/representations_vgg_face.pkl")
-#         else:
-#             print("The file does not exist")
-#         # os.remove("C:/Users/engel/Documents/5MIN/AIProject_SmartGallery/faceDataBase/representations_vgg_face.pkl")
-#     if dirtyFlag:
-#         with open('id_name.json','w') as file:
-#             json.dump(data, file)
-
-        
-#     return name
-
-
-def getName():
-    return str(input())

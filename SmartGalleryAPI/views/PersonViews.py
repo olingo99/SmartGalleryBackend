@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
-from ..models import Person
+from ..models import Person, LinkPhotoPerson
 from ..serializers import PersonSerializer
 import os
 
@@ -12,14 +12,16 @@ def fuse(old_person_instance, new_name):
     '''
     # Get the person with given new_name
     new_person_instance = Person.objects.get(Name=new_name)
-    # Get all the photos of the new_person
-    new_person_photos = new_person_instance.photo_set.all()
-    print('new_person_photos', new_person_photos)
-    # Get all the photos of the person
-    person_photos = old_person_instance.photo_set.all()
-    # Add all the photos of the person to the new_person
-    for photo in person_photos:
-        photo.Person = new_person_instance
+
+    link_photo_person_instances = LinkPhotoPerson.objects.filter(Person=old_person_instance)
+
+    # Change the person associated with each LinkPhotoPerson instance to the new person
+    for link_photo_person in link_photo_person_instances:
+        link_photo_person.Person = new_person_instance
+        link_photo_person.save()
+
+
+
     # Move all cropped faces of the person to the new_person
     person_cropped_faces = old_person_instance.croppedface_set.all()
     nb_cropped_faces = len(new_person_instance.croppedface_set.all())

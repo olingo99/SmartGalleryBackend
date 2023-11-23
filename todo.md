@@ -1,0 +1,3 @@
+- multiple poeple in photo -> giel gets moved twice or more
+- handle user
+- crash si trouve pas de visage? photo vincent

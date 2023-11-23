@@ -4,12 +4,45 @@ from rest_framework import status
 from rest_framework import permissions
 from ..models import Person
 from ..serializers import PersonSerializer
+import os
+
+def fuse(old_person_instance, new_name):
+    '''
+    Fuses the given person with the person with given new_name
+    '''
+    # Get the person with given new_name
+    new_person_instance = Person.objects.get(Name=new_name)
+    # Get all the photos of the new_person
+    new_person_photos = new_person_instance.photo_set.all()
+    print('new_person_photos', new_person_photos)
+    # Get all the photos of the person
+    person_photos = old_person_instance.photo_set.all()
+    # Add all the photos of the person to the new_person
+    for photo in person_photos:
+        photo.Person = new_person_instance
+    # Move all cropped faces of the person to the new_person
+    person_cropped_faces = old_person_instance.croppedface_set.all()
+    nb_cropped_faces = len(new_person_instance.croppedface_set.all())
+    for cropped_face in person_cropped_faces:
+        cropped_face.Person = new_person_instance
+        new_path = 'faceDataBase/'+str(new_person_instance.id)+'/'+str(nb_cropped_faces)+'.png'
+        os.rename(cropped_face.Path, new_path)
+        cropped_face.Path = new_path
+        nb_cropped_faces += 1
+        cropped_face.save()
+    os.rmdir('faceDataBase/'+str(old_person_instance.id))
+    if os.path.exists('faceDataBase/representations_vgg_face.pki'): 
+        os.remove('faceDataBase/representations_vgg_face.pki')
+    # Delete the person
+    new_person_photos = new_person_instance.photo_set.all()
+    print('new_person_photos', new_person_photos)
+    old_person_instance.delete()
 
 
 
 class PersonListApiView(APIView):
     # add permission to check if user is authenticated
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
 
     # 1. List all
     def get(self, request, *args, **kwargs):
@@ -39,9 +72,9 @@ class PersonListApiView(APIView):
 
 class PersonDetailApiView(APIView):
         # add permission to check if user is authenticated
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
 
-    def get_object(self, person_id, user_id):
+    def get_object(self, person_id, user_id=1):
         '''
         Helper method to get the object with given person_id, and user_id
         '''
@@ -70,12 +103,26 @@ class PersonDetailApiView(APIView):
         '''
         Updates the Person with given person_id
         '''
-        person_instance = self.get_object(person_id, request.user.id)
+        print(request.user)
+        person_instance = self.get_object(person_id, 1)
         if not person_instance:
             return Response(
                 {'error': 'Person not found'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        # Check if the name has changed
+        new_name = request.data.get('Name')
+        if new_name and new_name != person_instance.Name:
+            # Check if the new name already exists
+            if Person.objects.filter(Name=new_name).exists():
+                # Call the fuse function
+                fuse(person_instance, new_name)
+                return Response(
+                    {'success': 'Person fused successfully'},
+                    status=status.HTTP_200_OK
+                )
+
         serializer = PersonSerializer(person_instance, data=request.data)
         if serializer.is_valid():
             serializer.save()

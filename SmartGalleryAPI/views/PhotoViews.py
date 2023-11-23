@@ -113,6 +113,8 @@ from django.shortcuts import render
 from django import forms
 from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponse
+import re
+from unidecode import unidecode
 # class UploadFileForm(forms.Form):
 #     file = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))
 
@@ -130,6 +132,14 @@ from django.http import HttpResponse
 #         return response
 
 # need to add to middleware list
+
+def clean_filename(filename):
+    # Remove accents
+    filename = unidecode(filename)
+    # Remove special characters but keep periods and file extensions
+    filename = re.sub(r'[^a-zA-Z0-9_.-]', '', filename)
+    return filename
+
 user = User.objects.get(pk=1)
 class testUploadPhoto(APIView):
     def post(self, request, *args, **kwargs):
@@ -143,11 +153,14 @@ class testUploadPhoto(APIView):
         if 'file0' not in request.FILES:
             return Response({'error': 'No file for upload'}, status=400)
         for _, file in request.FILES.lists():
-            FileSystemStorage(location=f"temp").save(file[0].name, file[0])
+            filename = clean_filename(file[0].name)
+            print(filename)
+            filename = FileSystemStorage(location=f"temp").save(filename, file[0])
+            print(filename)
             # print(list(os.walk(f"photos/{file[0].name}")))
             # photoObject = Photo.objects.create(Path=f"photos/{file[0].name}", User=user)
             # photoObject.save()
-            detectSubject(f"temp/{file[0].name}")
+            detectSubject(f"temp/{filename}")
         print('success')
 
 
@@ -167,7 +180,6 @@ from PIL import Image
 import os
 from ..models import Person, CroppedFace, LinkPhotoPerson, Photo
 from ..serializers import PersonSerializer, CroppedFaceSerializer
-
 def detectSubject(img):
     model = YOLO("yolov8n.pt")
     # img = Image.open(img)
@@ -180,8 +192,19 @@ def detectSubject(img):
             if box.cls == 0:
                 return detectPerson(img)
             else:
+                print('box:')
+                print(box)
                 detectedClass = result.names[int(box.cls[0])]
-                if  detectedClass not in classes : classes.append(detectedClass) 
+                if  detectedClass not in classes : classes.append(detectedClass)
+                person = Person.objects.get(Name=detectedClass) if detectedClass in Person.objects.values_list('Name', flat=True) else Person.objects.create(Name=detectedClass, User=user)
+                person.save()    
+                photo = Photo.objects.create(Path=f"photos/{img.split('/')[-1]}", User=user)
+                photo.save()
+                box = box.xyxy[0]
+                LinkPhotoPerson.objects.create(BoundingBox=f"{box[0]},{box[1]},{box[2]},{box[3]}", Person=person, Photo=photo).save()
+                    # return ((),f"{detectedClass} in image")
+
+    os.rename(img, f"photos/{img.split('/')[-1]}")
     return ((),f"No human, {' '.join(str(i) for i in classes)} in image")
 
 
@@ -221,15 +244,18 @@ def detectPerson(img):
         print(max_row['identity'])
         print(max_row['VGG-Face_cosine'])
         if max_row['VGG-Face_cosine'] <= 0.2:                           #to do after new face is done
+
             identity = max_row['identity'].replace("\\", "/")
+            print('identity')
+            print(identity)
             identity = identity.split("/")[-2]
             print('identity ' + identity)
             find_result[len(find_result)]=(face,identity)
             os.remove("temp/cropped_face.png")
-            photo = Photo.objects.create(Path=f"photos/{identity}.png", User=user)
+            photo = Photo.objects.create(Path=f"photos/{img.split('/')[-1]}", User=user)
             photo.save()
             # extension = os.path.splitext(img)[1]
-            os.rename(img, f"photos/{identity}/{img.split('/')[-1]}")
+            os.rename(img, f"photos/{img.split('/')[-1]}")
 
             LinkPhotoPerson.objects.create(BoundingBox=f"{x1},{y1},{x2},{y2}", Person=Person.objects.get(pk=identity), Photo=photo).save()
 
@@ -237,15 +263,17 @@ def detectPerson(img):
             # id = len(find_result)
             person = Person.objects.create(Name='Unknown', User=user)
             person.save()
+            person.Name = f"Unknown-{person.id}"
+            person.save()
             id = person.id
             os.mkdir(f"faceDataBase/{person.id}")
             os.rename("temp/cropped_face.png", f"faceDataBase/{person.id}/0.png")
             # FileSystemStorage(location=f"photos/{person.id}").save(img, image)
             # extension = os.path.splitext(img)[1]
-            os.mkdir(f"photos/{person.id}")
-            os.rename(img, f"photos/{person.id}/{img.split('/')[-1]}")
+            # os.mkdir(f"photos/{person.id}")
+            os.rename(img, f"photos/{img.split('/')[-1]}")
 
-            photoObject = Photo.objects.create(Path=f"photos/{person.id}/0.png", User=user, )
+            photoObject = Photo.objects.create(Path=f"photos/{img.split('/')[-1]}", User=user, )
             photoObject.save()
             link = LinkPhotoPerson.objects.create(BoundingBox=f"{x1},{y1},{x2},{y2}", Person=person, Photo=photoObject)
             link.save()
@@ -260,3 +288,12 @@ def detectPerson(img):
             find_result[id]=face_result
             # name = addToDb(cropped_face, id, face_result)
     return find_result
+
+
+
+# def createNewPerson(animal: bool, name = 'Unknown'):
+#     person = Person.objects.create(Name=name, User=user)
+#     person.save()
+#     id = person.id
+#     if not animal: os.mkdir(f"faceDataBase/{person.id}")
+#     os.mkdir(f"photos/{person.id}")

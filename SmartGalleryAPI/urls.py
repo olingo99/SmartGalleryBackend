@@ -11,6 +11,10 @@ from .views.PersonViews import (
     PersonDetailApiView,
 )
 
+from .views.PhotoPersonLinkViews import (
+    LinkPhotoPersonApiView,
+)
+
 app_name = "SmartGalleryAPI"
 urlpatterns = [
     path("PhotoApi",PhotoListApiView.as_view() ),
@@ -18,4 +22,6 @@ urlpatterns = [
     path("PersonApi",PersonListApiView.as_view() ),
     path("PersonApi/<int:person_id>",PersonDetailApiView.as_view() ),
     path("PhotoApi/upload", testUploadPhoto.as_view()),
+
+    path("LinkPhotoPersonApi/<int:LinkId>",LinkPhotoPersonApiView.as_view() ),
 ]

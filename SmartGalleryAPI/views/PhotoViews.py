@@ -266,7 +266,8 @@ def detectPerson(img, user):
             photo = Photo.objects.create(Path=f"photos/{img.split('/')[-1]}", User=user)
             photo.save()
             # extension = os.path.splitext(img)[1]
-            os.rename(img, f"photos/{img.split('/')[-1]}")
+            if os.path.exists(img):
+                os.rename(img, f"photos/{img.split('/')[-1]}")
 
             LinkPhotoPerson.objects.create(BoundingBox=f"{x1},{y1},{x2},{y2}", Person=Person.objects.get(pk=identity), Photo=photo).save()
 
@@ -282,7 +283,8 @@ def detectPerson(img, user):
             # FileSystemStorage(location=f"photos/{person.id}").save(img, image)
             # extension = os.path.splitext(img)[1]
             # os.mkdir(f"photos/{person.id}")
-            os.rename(img, f"photos/{img.split('/')[-1]}")
+            if os.path.exists(img):
+                os.rename(img, f"photos/{img.split('/')[-1]}")
 
             photoObject = Photo.objects.create(Path=f"photos/{img.split('/')[-1]}", User=user, )
             photoObject.save()

@@ -20,8 +20,6 @@ def fuse(old_person_instance, new_name):
         link_photo_person.Person = new_person_instance
         link_photo_person.save()
 
-
-
     # Move all cropped faces of the person to the new_person
     person_cropped_faces = old_person_instance.croppedface_set.all()
     nb_cropped_faces = len(new_person_instance.croppedface_set.all())
@@ -76,7 +74,7 @@ class PersonDetailApiView(APIView):
         # add permission to check if user is authenticated
     # permission_classes = [permissions.IsAuthenticated]
 
-    def get_object(self, person_id, user_id=1):
+    def get_object(self, person_id, user_id):
         '''
         Helper method to get the object with given person_id, and user_id
         '''
@@ -106,7 +104,7 @@ class PersonDetailApiView(APIView):
         Updates the Person with given person_id
         '''
         print(request.user)
-        person_instance = self.get_object(person_id, 1)
+        person_instance = self.get_object(person_id, request.user.id)
         if not person_instance:
             return Response(
                 {'error': 'Person not found'},
@@ -117,7 +115,7 @@ class PersonDetailApiView(APIView):
         new_name = request.data.get('Name')
         if new_name and new_name != person_instance.Name:
             # Check if the new name already exists
-            if Person.objects.filter(Name=new_name).exists():
+            if Person.objects.filter(Name=new_name, User = request.user).exists():
                 # Call the fuse function
                 fuse(person_instance, new_name)
                 return Response(
@@ -127,6 +125,9 @@ class PersonDetailApiView(APIView):
 
         serializer = PersonSerializer(person_instance, data=request.data)
         if serializer.is_valid():
+            validated_data = serializer.validated_data
+            # Remove the 'User' field from the validated data
+            validated_data.pop('User', None)
             serializer.save()
             return Response(
                 {'success': 'Person updated successfully'},

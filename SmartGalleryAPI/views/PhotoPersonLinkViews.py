@@ -12,6 +12,11 @@ class LinkPhotoPersonApiView(APIView):
         Update the LinkPhotoPerson instance
         '''
         link_photo_person = LinkPhotoPerson.objects.get(id=LinkId)
+
+        if link_photo_person.Photo.User != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+
         old_person_Id = link_photo_person.Person_id
         link_photo_person.Person_id = request.data['Person_id']
         link_photo_person.save()

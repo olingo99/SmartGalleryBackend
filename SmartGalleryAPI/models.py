@@ -9,6 +9,7 @@ class Photo(models.Model):
     Location = models.CharField(max_length=200)
     User = models.ForeignKey(User, on_delete=models.CASCADE)
     Persons = models.ManyToManyField('Person', through='LinkPhotoPerson')
+    Tag = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
         return f'{self.User} uploaded on {self.Date.date}'
@@ -16,8 +17,11 @@ class Photo(models.Model):
 
 
 class Person(models.Model):
-    Name = models.CharField(max_length = 100, unique=True)
+    Name = models.CharField(max_length = 100)
     User = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+
+    class Meta:
+        unique_together = ('Name', 'User')
 
     def __str__(self):
         return self.Name

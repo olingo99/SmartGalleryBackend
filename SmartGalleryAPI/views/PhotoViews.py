@@ -7,7 +7,7 @@ from ..serializers import PhotoSerializer, PersonSerializer
 
 class PhotoListApiView(APIView):
     # add permission to check if user is authenticated
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
 
     # 1. List all
     def get(self, request, *args, **kwargs):
@@ -18,6 +18,8 @@ class PhotoListApiView(APIView):
         serializer = PhotoSerializer(photos, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+    #todo remove
     # 2. Create
     def post(self, request, *args, **kwargs):
         '''
@@ -39,7 +41,7 @@ class PhotoListApiView(APIView):
 
 class PhotoDetailApiView(APIView):
         # add permission to check if user is authenticated
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self, photo_id, user_id):
         '''
@@ -55,6 +57,7 @@ class PhotoDetailApiView(APIView):
         '''
         Retrieves the Photo with given photo_id
         '''
+        # print(request.user.id)
         photo_instance = self.get_object(photo_id, request.user.id)
         if not photo_instance:
             return Response(
@@ -140,7 +143,7 @@ def clean_filename(filename):
     filename = re.sub(r'[^a-zA-Z0-9_.-]', '', filename)
     return filename
 
-user = User.objects.get(pk=1)
+# user = User.objects.get(pk=1)
 class testUploadPhoto(APIView):
     def post(self, request, *args, **kwargs):
         '''
@@ -160,7 +163,7 @@ class testUploadPhoto(APIView):
             # print(list(os.walk(f"photos/{file[0].name}")))
             # photoObject = Photo.objects.create(Path=f"photos/{file[0].name}", User=user)
             # photoObject.save()
-            detectSubject(f"temp/{filename}")
+            detectSubject(f"temp/{filename}", request.user)
         print('success')
 
 
@@ -180,7 +183,7 @@ from PIL import Image
 import os
 from ..models import Person, CroppedFace, LinkPhotoPerson, Photo
 from ..serializers import PersonSerializer, CroppedFaceSerializer
-def detectSubject(img):
+def detectSubject(img, user):
     model = YOLO("yolov8n.pt")
     # img = Image.open(img)
     res = model.predict(img)
@@ -190,7 +193,7 @@ def detectSubject(img):
         print(len(result.boxes))
         for box in result.boxes:
             if box.cls == 0:
-                return detectPerson(img)
+                return detectPerson(img, user)
             else:
                 print('box:')
                 print(box)
@@ -210,7 +213,7 @@ def detectSubject(img):
 
 
 
-def detectPerson(img):
+def detectPerson(img, user):
     faces = DeepFace.extract_faces(img, detector_backend='mtcnn')
     image = Image.open(img)
     # image = img
@@ -219,6 +222,8 @@ def detectPerson(img):
     padding_sacle = 0.05
     padding = (padding_sacle*size[0], padding_sacle*size[1])
     find_result = {}
+    print('faces')
+    print(faces)
     for face in faces:
         face = face['facial_area']
         x1,x2 = max(face['x']-padding[0],0), min(face['x']+face['w']+padding[0], size[0])
@@ -229,7 +234,8 @@ def detectPerson(img):
         face_result = DeepFace.find("temp/cropped_face.png", "faceDataBase", enforce_detection=False)
         max_cosine = float('inf')
         max_index = -1
-
+        print('face_result')
+        print(face_result)
         for i, df in enumerate(face_result):
             cosine = df['VGG-Face_cosine'].min()
             if cosine < max_cosine:
@@ -239,11 +245,16 @@ def detectPerson(img):
         print('face_result', face_result)
 
         max_df = face_result[max_index]
+        print("max_df")
         print(max_df)
-        max_row = max_df.loc[max_df['VGG-Face_cosine'].idxmin()]
-        print(max_row['identity'])
-        print(max_row['VGG-Face_cosine'])
-        if max_row['VGG-Face_cosine'] <= 0.2:                           #to do after new face is done
+        if not max_df.empty:
+            max_row = max_df.loc[max_df['VGG-Face_cosine'].idxmin()]
+            print(max_row['identity'])
+            print(max_row['VGG-Face_cosine'])
+        else:
+            max_row = None
+
+        if max_row is not None and max_row['VGG-Face_cosine'] <= 0.2:                           #to do after new face is done
 
             identity = max_row['identity'].replace("\\", "/")
             print('identity')

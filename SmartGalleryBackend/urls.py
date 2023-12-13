@@ -20,6 +20,9 @@ from SmartGalleryAPI import urls as SmartGalleryAPIUrls
 from rest_framework.authtoken.views import obtain_auth_token
 from .views.UserViews import CreateUserView
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     # path('api-auth/', include('rest_framework.urls')),
@@ -27,3 +30,6 @@ urlpatterns = [
     path('create-user/', CreateUserView.as_view(), name='create_user'),
     path('SmartGalleryAPI/', include(SmartGalleryAPIUrls)),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

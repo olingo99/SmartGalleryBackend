@@ -140,5 +140,5 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 
 
-MEDIA_URL = '/media/'
+MEDIA_URL = '/photos/'
 MEDIA_ROOT = BASE_DIR / 'photos'

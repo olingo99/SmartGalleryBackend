@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework import permissions
 from ..models import Person, User
 from ..serializers import PhotoSerializer, PersonSerializer
-
+from django.db.models import Q
 class PhotoListApiView(APIView):
     # add permission to check if user is authenticated
     # permission_classes = [permissions.IsAuthenticated]
@@ -21,23 +21,44 @@ class PhotoListApiView(APIView):
 
     #todo remove
     # 2. Create
-    def post(self, request, *args, **kwargs):
-        '''
-        Create the Photo with given photo data
-        '''
-        data = {
-            'Path': request.data.get('Path'), 
-            'Location': request.data.get('Location'), 
-            'User': request.user.id
-        }
-        serializer = PhotoSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    # def post(self, request, *args, **kwargs):
+    #     '''
+    #     Create the Photo with given photo data
+    #     '''
+    #     data = {
+    #         'Path': request.data.get('Path'), 
+    #         'Location': request.data.get('Location'), 
+    #         'User': request.user.id
+    #     }
+    #     serializer = PhotoSerializer(data=data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
+class PhotoTagGetApiView(APIView):
+    # add permission to check if user is authenticated
+    # permission_classes = [permissions.IsAuthenticated]
+
+    # 1. List all
+    # def get(self, request, tag, *args, **kwargs):
+    #     '''
+    #     List all the photo items for given requested user
+    #     '''
+    #     photos = Photo.objects.filter(User = request.user.id, Tag=tag)
+    #     serializer = PhotoSerializer(photos, many=True)
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get(self, request, *args, **kwargs):
+        tag_string = self.request.query_params.get('Tag', None)
+        if tag_string is None:
+            return Response({"error": "No tag provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        photos = Photo.objects.filter(Q(User=request.user.id) & Q(Tag__icontains=tag_string))
+        serializer = PhotoSerializer(photos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class PhotoDetailApiView(APIView):
         # add permission to check if user is authenticated
@@ -75,6 +96,8 @@ class PhotoDetailApiView(APIView):
         '''
         print("put")
         photo_instance = self.get_object(photo_id, request.user.id)
+        print(photo_id)
+        print(request.user.id)
         if not photo_instance:
             return Response(
                 {"res": "Object with photo id does not exists"}, 
@@ -84,7 +107,8 @@ class PhotoDetailApiView(APIView):
             'Path': request.data.get('Path'),
             'Location': request.data.get('Location'),
             'User': request.user.id,
-            'Date': request.data.get('Date')
+            'Date': request.data.get('Date'),
+            'Tag': request.data.get('Tag')
         }
         serializer = PhotoSerializer(instance = photo_instance, data=data, partial = True)
         if serializer.is_valid():

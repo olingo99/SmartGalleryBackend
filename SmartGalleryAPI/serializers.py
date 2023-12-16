@@ -5,7 +5,7 @@ from .models import Photo, Person, LinkPhotoPerson, CroppedFace
 class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
-        fields = ["Path", "Date", "Location", "User"]
+        fields = ["id","Path", "Date", "Location", "User", "Tag", "Persons"]
 
 
 class PersonSerializer(serializers.ModelSerializer):

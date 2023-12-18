@@ -5,6 +5,17 @@ from rest_framework import permissions
 from ..models import Person, User
 from ..serializers import PhotoSerializer, PersonSerializer
 
+
+class AllPhotoListApiView(APIView):
+    def get(self, request, *args, **kwargs):
+        '''
+        List all the photo items for given requested user
+        '''
+        photos = Photo.objects.all()
+        serializer = PhotoSerializer(photos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class PhotoListApiView(APIView):
     # add permission to check if user is authenticated
     # permission_classes = [permissions.IsAuthenticated]
@@ -21,21 +32,21 @@ class PhotoListApiView(APIView):
 
     #todo remove
     # 2. Create
-    def post(self, request, *args, **kwargs):
-        '''
-        Create the Photo with given photo data
-        '''
-        data = {
-            'Path': request.data.get('Path'), 
-            'Location': request.data.get('Location'), 
-            'User': request.user.id
-        }
-        serializer = PhotoSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    # def post(self, request, *args, **kwargs):
+    #     '''
+    #     Create the Photo with given photo data
+    #     '''
+    #     data = {
+    #         'Path': request.data.get('Path'), 
+    #         'Location': request.data.get('Location'), 
+    #         'User': request.user.id
+    #     }
+    #     serializer = PhotoSerializer(data=data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
 

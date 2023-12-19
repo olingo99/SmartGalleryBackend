@@ -31,7 +31,16 @@ class LinkPhotoPersonApiView(APIView):
         croppedface.Person_id = personId
         croppedface.save()
         croppedFaceNumber = len(CroppedFace.objects.filter(Person_id=personId))
+        croppedface.Path = 'faceDataBase/'+str(personId)+'/'+str(croppedFaceNumber)+'.png'
         os.rename(croppedface.Path, 'faceDataBase/'+str(personId)+'/'+str(croppedFaceNumber)+'.png')
+        nb_photos_old_person = len(LinkPhotoPerson.objects.filter(Person_id=old_person_Id))
+        if nb_photos_old_person == 0:
+            os.rmdir('faceDataBase/'+str(old_person_Id))
+            try:
+                old_person = Person.objects.get(id=old_person_Id)
+                old_person.delete()
+            except Person.DoesNotExist:
+                pass
         if os.path.exists('faceDataBase/representations_vgg_face.pki'): 
             os.remove('faceDataBase/representations_vgg_face.pki') 
         return Response(status=status.HTTP_200_OK)

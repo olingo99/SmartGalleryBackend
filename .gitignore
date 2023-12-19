@@ -5,6 +5,7 @@ yolov8n.pt
 
 db.sqlite3
 *.png
+*.pyc
 
 *.JPG
 *.jpg

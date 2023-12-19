@@ -5,6 +5,11 @@ from rest_framework import permissions
 from ..models import CroppedFace
 from ..serializers import CroppedFaceSerializer
 
+
+from django.http import FileResponse
+from django.conf import settings
+import os
+
 class CroppedFaceApiView(APIView):
     def get(self, request, person_id,  *args, **kwargs):
         '''
@@ -12,7 +17,11 @@ class CroppedFaceApiView(APIView):
         '''
         croppedface = CroppedFace.objects.filter(Person=person_id).first()
         if croppedface is not None:
-            serializer = CroppedFaceSerializer(croppedface)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            # print(os.getcwd())
+            wd = os.getcwd().replace('\\', '/')
+            return FileResponse(open(f"{wd}/{croppedface.Path}", 'rb'), content_type='image/jpeg')
+            # return FileResponse(open("C:/Users/engel/Documents/5MIN/SmartGalleryBackend/faceDataBase/133302/2.png", 'rb'), content_type='image/jpeg')
+
         else:
             return Response({"detail": "No CroppedFace found for this person"}, status=status.HTTP_404_NOT_FOUND)
+    

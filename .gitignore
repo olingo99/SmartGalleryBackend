@@ -14,3 +14,5 @@ photos
 photos/*
 temp/*
 db.sqlite3
+*.pyc
+SmartGalleryAPI/views/__pycache__/PhotoViews.cpython-310.pyc

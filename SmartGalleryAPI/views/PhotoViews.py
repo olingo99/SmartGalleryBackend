@@ -53,7 +53,8 @@ class PhotoPersonAPIView(APIView):
         '''
         List all the photo items for given requested user
         '''
-        photos = Photo.objects.filter(User = request.user.id, Person = person_id)
+        person = Person.objects.get(id=person_id)
+        photos = person.photo_set.filter(User = request.user.id)
         serializer = PhotoSerializer(photos, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

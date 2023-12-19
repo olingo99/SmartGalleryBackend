@@ -202,6 +202,7 @@ from PIL import Image
 import os
 from ..models import Person, CroppedFace, LinkPhotoPerson, Photo
 from ..serializers import PersonSerializer, CroppedFaceSerializer
+from PIL import Image as PILImage
 def detectSubject(img, user):
     model = YOLO("yolov8n.pt")
     # img = Image.open(img)
@@ -224,6 +225,15 @@ def detectSubject(img, user):
                 photo.save()
                 box = box.xyxy[0]
                 LinkPhotoPerson.objects.create(BoundingBox=f"{box[0]},{box[1]},{box[2]},{box[3]}", Person=person, Photo=photo).save()
+                # Crop the image using the bounding box coordinates and save the cropped image
+                image = Image.open(img)
+                cropped_image = image.crop((box[0], box[1], box[2], box[3]))
+                cropped_image_path = f"animalsCropped{img.split('/')[-1]}"
+                cropped_image.save(cropped_image_path)
+
+                # Create a CroppedFace object and save it
+                cropped_face = CroppedFace.objects.create(Path=cropped_image_path, Person=person)
+                cropped_face.save()
                     # return ((),f"{detectedClass} in image")
 
     os.rename(img, f"photos/{img.split('/')[-1]}")

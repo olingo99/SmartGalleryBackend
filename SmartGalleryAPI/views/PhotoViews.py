@@ -220,7 +220,7 @@ def detectSubject(img, user):
                 if  detectedClass not in classes : classes.append(detectedClass)
                 person = Person.objects.get(Name=detectedClass) if detectedClass in Person.objects.values_list('Name', flat=True) else Person.objects.create(Name=detectedClass, User=user)
                 person.save()    
-                photo = Photo.objects.create(Path=f"photos/{img.split('/')[-1]}", User=user)
+                photo = Photo.objects.create(Path=f"photos/{img.split('/')[-1]}", User=user) if not Photo.objects.filter(Path=f"photos/{img.split('/')[-1]}").exists() else Photo.objects.get(Path=f"photos/{img.split('/')[-1]}")
                 photo.save()
                 box = box.xyxy[0]
                 LinkPhotoPerson.objects.create(BoundingBox=f"{box[0]},{box[1]},{box[2]},{box[3]}", Person=person, Photo=photo).save()
@@ -282,8 +282,8 @@ def detectPerson(img, user):
             print('identity ' + identity)
             find_result[len(find_result)]=(face,identity)
             os.remove("temp/cropped_face.png")
-            photo = Photo.objects.create(Path=f"photos/{img.split('/')[-1]}", User=user)
-            photo.save()
+            photo = Photo.objects.create(Path=f"photos/{img.split('/')[-1]}", User=user) if not Photo.objects.filter(Path=f"photos/{img.split('/')[-1]}").exists() else Photo.objects.get(Path=f"photos/{img.split('/')[-1]}")
+            photo.save() 
             # extension = os.path.splitext(img)[1]
             if os.path.exists(img):
                 os.rename(img, f"photos/{img.split('/')[-1]}")
@@ -305,7 +305,7 @@ def detectPerson(img, user):
             if os.path.exists(img):
                 os.rename(img, f"photos/{img.split('/')[-1]}")
 
-            photoObject = Photo.objects.create(Path=f"photos/{img.split('/')[-1]}", User=user, )
+            photoObject = Photo.objects.create(Path=f"photos/{img.split('/')[-1]}", User=user, ) if not Photo.objects.filter(Path=f"photos/{img.split('/')[-1]}").exists() else Photo.objects.get(Path=f"photos/{img.split('/')[-1]}")
             photoObject.save()
             link = LinkPhotoPerson.objects.create(BoundingBox=f"{x1},{y1},{x2},{y2}", Person=person, Photo=photoObject)
             link.save()

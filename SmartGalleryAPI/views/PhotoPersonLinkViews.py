@@ -7,18 +7,20 @@ from ..serializers import PersonSerializer, LinkPhotoPersonSerializer
 import os
 
 class LinkPhotoPersonApiView(APIView):
-    def put(self, request,LinkId, *args, **kwargs):
+    def put(self, request,PhotoId, *args, **kwargs):
         '''
         Update the LinkPhotoPerson instance
         '''
-        link_photo_person = LinkPhotoPerson.objects.get(id=LinkId)
+        old_person_Id = request.data['Old_Person_id']
+        link_photo_person = LinkPhotoPerson.objects.get(Photo_id=PhotoId, Person_id=old_person_Id)
+        # link_photo_person = LinkPhotoPerson.objects.get(id=LinkId)
 
         if link_photo_person.Photo.User != request.user:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
 
-        old_person_Id = link_photo_person.Person_id
-        link_photo_person.Person_id = request.data['Person_id']
+        # old_person_Id = link_photo_person.Person_id
+        link_photo_person.Person_id = request.data['New_Person_id']
         link_photo_person.save()
         photoId = link_photo_person.Photo_id
         personId = request.data['Person_id']

@@ -29,7 +29,7 @@ urlpatterns = [
     path("PersonApi/<int:person_id>",PersonDetailApiView.as_view() ),
     path("PhotoApi/upload", testUploadPhoto.as_view()),
     path("AllPhotoApi",AllPhotoListApiView.as_view() ),
-    path("LinkPhotoPersonApi/<int:LinkId>",LinkPhotoPersonApiView.as_view() ),
+    path("LinkPhotoPersonApi/<int:PhotoId>",LinkPhotoPersonApiView.as_view() ),
     path("PhotoPersonApi/<int:person_id>",PhotoPersonAPIView.as_view() ),
     path("CroppedFaceApi/<int:person_id>",CroppedFaceApiView.as_view() ),
 ]

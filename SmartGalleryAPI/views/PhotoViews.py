@@ -227,12 +227,13 @@ def detectSubject(img, user):
                 LinkPhotoPerson.objects.create(BoundingBox=f"{box[0]},{box[1]},{box[2]},{box[3]}", Person=person, Photo=photo).save()
                 # Crop the image using the bounding box coordinates and save the cropped image
                 image = Image.open(img)
-                cropped_image = image.crop((box[0], box[1], box[2], box[3]))
-                cropped_image_path = f"animalsCropped{img.split('/')[-1]}"
+                # breakpoint()
+                cropped_image = image.crop((int(box[0]), int(box[1]), int(box[2]), int(box[3])))
+                cropped_image_path = f"animalsCropped/{img.split('/')[-1]}"
                 cropped_image.save(cropped_image_path)
 
                 # Create a CroppedFace object and save it
-                cropped_face = CroppedFace.objects.create(Path=cropped_image_path, Person=person)
+                cropped_face = CroppedFace.objects.create(Path=cropped_image_path, Person=person, OriginalPhoto=photo)
                 cropped_face.save()
                     # return ((),f"{detectedClass} in image")
 

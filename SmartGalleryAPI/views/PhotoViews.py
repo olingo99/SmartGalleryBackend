@@ -48,7 +48,14 @@ class PhotoListApiView(APIView):
 
     #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    
+class PhotoPersonAPIView(APIView):
+    def get(self, request, person_id, *args, **kwargs):
+        '''
+        List all the photo items for given requested user
+        '''
+        photos = Photo.objects.filter(User = request.user.id, Person = person_id)
+        serializer = PhotoSerializer(photos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class PhotoDetailApiView(APIView):
         # add permission to check if user is authenticated

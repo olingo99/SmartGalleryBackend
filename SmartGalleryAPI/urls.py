@@ -5,6 +5,7 @@ from .views.PhotoViews import (
     PhotoDetailApiView,
     testUploadPhoto,
     AllPhotoListApiView,
+    PhotoPersonAPIView,
 )
 
 from .views.PersonViews import (
@@ -25,4 +26,5 @@ urlpatterns = [
     path("PhotoApi/upload", testUploadPhoto.as_view()),
     path("AllPhotoApi",AllPhotoListApiView.as_view() ),
     path("LinkPhotoPersonApi/<int:LinkId>",LinkPhotoPersonApiView.as_view() ),
+    path("PhotoPersonApi/<int:person_id>",PhotoPersonAPIView.as_view() ),
 ]

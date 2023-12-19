@@ -23,7 +23,7 @@ class LinkPhotoPersonApiView(APIView):
         link_photo_person.Person_id = request.data['New_Person_id']
         link_photo_person.save()
         photoId = link_photo_person.Photo_id
-        personId = request.data['Person_id']
+        personId = request.data['New_Person_id']
         print('photoId', photoId)
         print('personId', personId)
         print('old_person_Id', old_person_Id)

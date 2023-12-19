@@ -6,21 +6,13 @@ from ..models import CroppedFace
 from ..serializers import CroppedFaceSerializer
 
 class CroppedFaceApiView(APIView):
-    def get(self, request, *args, **kwargs):
+    def get(self, request, person_id,  *args, **kwargs):
         '''
-        Get all the CroppedFace instances
+        Get the first CroppedFace instance associated with the Person
         '''
-        croppedface = CroppedFace.objects.all()
-        serializer = CroppedFaceSerializer(croppedface, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def post(self, request, *args, **kwargs):
-        '''
-        Create a new CroppedFace instance
-        '''
-        serializer = CroppedFaceSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        print(serializer.errors)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        croppedface = CroppedFace.objects.filter(Person=person_id).first()
+        if croppedface is not None:
+            serializer = CroppedFaceSerializer(croppedface)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "No CroppedFace found for this person"}, status=status.HTTP_404_NOT_FOUND)

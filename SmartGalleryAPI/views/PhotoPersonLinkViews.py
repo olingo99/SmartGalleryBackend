@@ -31,8 +31,9 @@ class LinkPhotoPersonApiView(APIView):
         croppedface.Person_id = personId
         croppedface.save()
         croppedFaceNumber = len(CroppedFace.objects.filter(Person_id=personId))
-        croppedface.Path = 'faceDataBase/'+str(personId)+'/'+str(croppedFaceNumber)+'.png'
         os.rename(croppedface.Path, 'faceDataBase/'+str(personId)+'/'+str(croppedFaceNumber)+'.png')
+        croppedface.Path = 'faceDataBase/'+str(personId)+'/'+str(croppedFaceNumber)+'.png'
+        croppedface.save()
         nb_photos_old_person = len(LinkPhotoPerson.objects.filter(Person_id=old_person_Id))
         if nb_photos_old_person == 0:
             os.rmdir('faceDataBase/'+str(old_person_Id))

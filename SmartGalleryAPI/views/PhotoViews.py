@@ -4,8 +4,20 @@ from rest_framework import status
 from rest_framework import permissions
 from ..models import Person, User
 from ..serializers import PhotoSerializer, PersonSerializer
+from django.db.models import Q
 
-
+class PhotoTagGetApiView(APIView):
+    def get(self, request, *args, **kwargs):
+        '''
+        List all the photo items for given requested user
+        '''
+        tag_string = self.request.query_params.get('Tag', None)
+        if tag_string is None:
+            return Response({"error":"No tag provided"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        photos = Photo.objects.filter(Q(User = request.user.id) & Q(Tag__icontains=tag_string))
+        serializer = PhotoSerializer(photos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 class AllPhotoListApiView(APIView):
     def get(self, request, *args, **kwargs):
         '''
@@ -103,7 +115,8 @@ class PhotoDetailApiView(APIView):
             'Path': request.data.get('Path'),
             'Location': request.data.get('Location'),
             'User': request.user.id,
-            'Date': request.data.get('Date')
+            'Date': request.data.get('Date'),
+            'Tag': request.data.get('Tag'),
         }
         serializer = PhotoSerializer(instance = photo_instance, data=data, partial = True)
         if serializer.is_valid():

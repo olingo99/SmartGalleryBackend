@@ -113,7 +113,6 @@ class PhotoDetailApiView(APIView):
             )
         data = {
             'Path': request.data.get('Path', photo_instance.Path),
-            'Location': request.data.get('Location', photo_instance.Location),
             'User': request.user.id,
             'Date': request.data.get('Date', photo_instance.Date),
             'Tag': request.data.get('Tag', photo_instance.Tag),

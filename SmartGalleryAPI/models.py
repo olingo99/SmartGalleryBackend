@@ -6,7 +6,6 @@ import json
 class Photo(models.Model):
     Path = models.CharField(max_length=200)
     Date = models.DateTimeField(auto_now=False, auto_now_add=True, blank= True)
-    Location = models.CharField(max_length=200, blank=True)
     User = models.ForeignKey(User, on_delete=models.CASCADE)
     Persons = models.ManyToManyField('Person', through='LinkPhotoPerson')
     Tag = models.CharField(max_length=200, blank=True)

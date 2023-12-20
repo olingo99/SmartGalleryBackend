@@ -3,10 +3,9 @@ from .models import Photo, Person, LinkPhotoPerson, CroppedFace
 
 
 class PhotoSerializer(serializers.ModelSerializer):
-    Location = serializers.CharField(required=False)
     class Meta:
         model = Photo
-        fields = ["id", "Path", "Date", "Location", "User", "Tag", "Persons"]
+        fields = ["id", "Path", "Date",  "User", "Tag", "Persons"]
 
 
 class PersonSerializer(serializers.ModelSerializer):

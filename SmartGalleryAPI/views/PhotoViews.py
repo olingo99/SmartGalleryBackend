@@ -273,26 +273,32 @@ def detectPerson(img, user):
         cropped_face = image.crop((x1, y1, x2, y2))
         # cropped_face = numpy.array(cropped_face)
         cropped_face.save("temp/cropped_face.png")
-        face_result = DeepFace.find("temp/cropped_face.png", "faceDataBase", enforce_detection=False)
+        if len(os.listdir("faceDataBase")) == 0:
+            face_result = None
+        else:
+            face_result = DeepFace.find("temp/cropped_face.png", "faceDataBase", enforce_detection=False)
         max_cosine = float('inf')
         max_index = -1
-        print('face_result')
-        print(face_result)
-        for i, df in enumerate(face_result):
-            cosine = df['VGG-Face_cosine'].min()
-            if cosine < max_cosine:
-                max_cosine = cosine
-                max_index = i
-        print('max_index', max_index)
-        print('face_result', face_result)
+        if face_result is not None:
+            print('face_result')
+            print(face_result)
+            for i, df in enumerate(face_result):
+                cosine = df['VGG-Face_cosine'].min()
+                if cosine < max_cosine:
+                    max_cosine = cosine
+                    max_index = i
+            print('max_index', max_index)
+            print('face_result', face_result)
 
-        max_df = face_result[max_index]
-        print("max_df")
-        print(max_df)
-        if not max_df.empty:
-            max_row = max_df.loc[max_df['VGG-Face_cosine'].idxmin()]
-            print(max_row['identity'])
-            print(max_row['VGG-Face_cosine'])
+            max_df = face_result[max_index]
+            print("max_df")
+            print(max_df)
+            if not max_df.empty:
+                max_row = max_df.loc[max_df['VGG-Face_cosine'].idxmin()]
+                print(max_row['identity'])
+                print(max_row['VGG-Face_cosine'])
+            else:
+                max_row = None
         else:
             max_row = None
 
@@ -335,7 +341,7 @@ def detectPerson(img, user):
             croppedFaceObject = CroppedFace.objects.create(Path=f"faceDataBase/{person.id}/0.png", Person=person, OriginalPhoto=photoObject)
             croppedFaceObject.save()
 
-            os.remove("faceDataBase/representations_vgg_face.pkl")
+            os.remove("faceDataBase/representations_vgg_face.pkl") if os.path.exists("faceDataBase/representations_vgg_face.pkl") else None
 
             # id = len([name for name in os.listdir("temp/faceDataBase")])
 

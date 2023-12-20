@@ -6,44 +6,45 @@ from ..models import Person, LinkPhotoPerson
 from ..serializers import PersonSerializer
 import os
 
-def fuse(old_person_instance, new_name):
-    '''
-    Fuses the given person with the person with given new_name
-    '''
-    # Get the person with given new_name
-    new_person_instance = Person.objects.get(Name=new_name)
 
-    link_photo_person_instances = LinkPhotoPerson.objects.filter(Person=old_person_instance)
 
-    # Change the person associated with each LinkPhotoPerson instance to the new person
-    for link_photo_person in link_photo_person_instances:
-        link_photo_person.Person = new_person_instance
-        link_photo_person.save()
 
-    # Move all cropped faces of the person to the new_person
-    person_cropped_faces = old_person_instance.croppedface_set.all()
-    nb_cropped_faces = len(new_person_instance.croppedface_set.all())
-    for cropped_face in person_cropped_faces:
-        cropped_face.Person = new_person_instance
-        new_path = 'faceDataBase/'+str(new_person_instance.id)+'/'+str(nb_cropped_faces)+'.png'
-        os.rename(cropped_face.Path, new_path)
-        cropped_face.Path = new_path
-        nb_cropped_faces += 1
-        cropped_face.save()
-    os.rmdir('faceDataBase/'+str(old_person_instance.id))
-    if os.path.exists('faceDataBase/representations_vgg_face.pki'): 
-        os.remove('faceDataBase/representations_vgg_face.pki')
-    # Delete the person
-    new_person_photos = new_person_instance.photo_set.all()
-    print('new_person_photos', new_person_photos)
-    old_person_instance.delete()
+# deprecated, use link api to fuse all photos
+# def fuse(old_person_instance, new_name):
+#     '''
+#     Fuses the given person with the person with given new_name
+#     '''
+#     # Get the person with given new_name
+#     new_person_instance = Person.objects.get(Name=new_name)
+
+#     link_photo_person_instances = LinkPhotoPerson.objects.filter(Person=old_person_instance)
+
+#     # Change the person associated with each LinkPhotoPerson instance to the new person
+#     for link_photo_person in link_photo_person_instances:
+#         link_photo_person.Person = new_person_instance
+#         link_photo_person.save()
+
+#     # Move all cropped faces of the person to the new_person
+#     person_cropped_faces = old_person_instance.croppedface_set.all()
+#     nb_cropped_faces = len(new_person_instance.croppedface_set.all())
+#     for cropped_face in person_cropped_faces:
+#         cropped_face.Person = new_person_instance
+#         new_path = 'faceDataBase/'+str(new_person_instance.id)+'/'+str(nb_cropped_faces)+'.png'
+#         os.rename(cropped_face.Path, new_path)
+#         cropped_face.Path = new_path
+#         nb_cropped_faces += 1
+#         cropped_face.save()
+#     os.rmdir('faceDataBase/'+str(old_person_instance.id))
+#     if os.path.exists('faceDataBase/representations_vgg_face.pki'): 
+#         os.remove('faceDataBase/representations_vgg_face.pki')
+#     # Delete the person
+#     new_person_photos = new_person_instance.photo_set.all()
+#     print('new_person_photos', new_person_photos)
+#     old_person_instance.delete()
 
 
 
 class PersonListApiView(APIView):
-    # add permission to check if user is authenticated
-    # permission_classes = [permissions.IsAuthenticated]
-
     # 1. List all
     def get(self, request, *args, **kwargs):
         '''
@@ -71,9 +72,6 @@ class PersonListApiView(APIView):
     
 
 class PersonDetailApiView(APIView):
-        # add permission to check if user is authenticated
-    # permission_classes = [permissions.IsAuthenticated]
-
     def get_object(self, person_id, user_id):
         '''
         Helper method to get the object with given person_id, and user_id
@@ -112,21 +110,20 @@ class PersonDetailApiView(APIView):
             )
         
         # Check if the name has changed
-        new_name = request.data.get('Name')
-        if new_name and new_name != person_instance.Name:
-            # Check if the new name already exists
-            if Person.objects.filter(Name=new_name, User = request.user).exists():
-                # Call the fuse function
-                fuse(person_instance, new_name)
-                return Response(
-                    {'success': 'Person fused successfully'},
-                    status=status.HTTP_200_OK
-                )
+        # new_name = request.data.get('Name')
+        # if new_name and new_name != person_instance.Name:
+        #     # Check if the new name already exists
+        #     if Person.objects.filter(Name=new_name, User = request.user).exists():
+        #         # Call the fuse function
+        #         fuse(person_instance, new_name)
+        #         return Response(
+        #             {'success': 'Person fused successfully'},
+        #             status=status.HTTP_200_OK
+        #         )
 
         serializer = PersonSerializer(person_instance, data=request.data)
         if serializer.is_valid():
             validated_data = serializer.validated_data
-            # Remove the 'User' field from the validated data
             validated_data.pop('User', None)
             serializer.save()
             return Response(

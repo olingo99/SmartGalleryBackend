@@ -24,9 +24,6 @@ class LinkPhotoPersonApiView(APIView):
         link_photo_person.save()
         photoId = link_photo_person.Photo_id
         personId = request.data['New_Person_id']
-        print('photoId', photoId)
-        print('personId', personId)
-        print('old_person_Id', old_person_Id)
         croppedface = CroppedFace.objects.get(Person_id=old_person_Id, OriginalPhoto_id=photoId)
         croppedface.Person_id = personId
         croppedface.save()
@@ -42,6 +39,6 @@ class LinkPhotoPersonApiView(APIView):
                 old_person.delete()
             except Person.DoesNotExist:
                 pass
-        if os.path.exists('faceDataBase/representations_vgg_face.pki'): 
-            os.remove('faceDataBase/representations_vgg_face.pki') 
+        if os.path.exists('faceDataBase/representations_vgg_face.pkl'): 
+            os.remove('faceDataBase/representations_vgg_face.pkl') 
         return Response(status=status.HTTP_200_OK)

@@ -20,7 +20,6 @@ class CroppedFaceApiView(APIView):
             # print(os.getcwd())
             wd = os.getcwd().replace('\\', '/')
             return FileResponse(open(f"{wd}/{croppedface.Path}", 'rb'), content_type='image/jpeg')
-            # return FileResponse(open("C:/Users/engel/Documents/5MIN/SmartGalleryBackend/faceDataBase/133302/2.png", 'rb'), content_type='image/jpeg')
 
         else:
             return Response({"detail": "No CroppedFace found for this person"}, status=status.HTTP_404_NOT_FOUND)

@@ -42,6 +42,6 @@ class LinkPhotoPersonApiView(APIView):
                 old_person.delete()
             except Person.DoesNotExist:
                 pass
-        if os.path.exists('faceDataBase/representations_vgg_face.pki'): 
-            os.remove('faceDataBase/representations_vgg_face.pki') 
+        if os.path.exists('faceDataBase/representations_vgg_face.pkl'): 
+            os.remove('faceDataBase/representations_vgg_face.pkl') 
         return Response(status=status.HTTP_200_OK)

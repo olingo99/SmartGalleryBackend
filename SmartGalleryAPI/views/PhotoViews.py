@@ -302,7 +302,7 @@ def detectPerson(img, user):
         else:
             max_row = None
 
-        if max_row is not None and max_row['VGG-Face_cosine'] <= 0.2:                           #to do after new face is done
+        if max_row is not None and max_row['VGG-Face_cosine'] <= 0.393:                           #to do after new face is done
 
             identity = max_row['identity'].replace("\\", "/")
             print('identity')
@@ -316,6 +316,8 @@ def detectPerson(img, user):
             # extension = os.path.splitext(img)[1]
             if os.path.exists(img):
                 os.rename(img, f"photos/{img.split('/')[-1]}")
+
+            print(identity)
 
             LinkPhotoPerson.objects.create(BoundingBox=f"{x1},{y1},{x2},{y2}", Person=Person.objects.get(pk=identity), Photo=photo).save()
 

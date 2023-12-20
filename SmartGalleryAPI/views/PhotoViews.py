@@ -112,11 +112,11 @@ class PhotoDetailApiView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         data = {
-            'Path': request.data.get('Path'),
-            'Location': request.data.get('Location'),
+            'Path': request.data.get('Path', photo_instance.Path),
+            'Location': request.data.get('Location', photo_instance.Location),
             'User': request.user.id,
-            'Date': request.data.get('Date'),
-            'Tag': request.data.get('Tag'),
+            'Date': request.data.get('Date', photo_instance.Date),
+            'Tag': request.data.get('Tag', photo_instance.Tag),
         }
         serializer = PhotoSerializer(instance = photo_instance, data=data, partial = True)
         if serializer.is_valid():
